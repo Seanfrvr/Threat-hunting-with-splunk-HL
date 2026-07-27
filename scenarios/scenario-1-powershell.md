@@ -37,3 +37,26 @@ A hunt query was executed across the `botsv3` index targeting process execution 
 
 ```spl
 index=botsv3 powershell (*-enc* OR *-encodedcommand* OR *-e *)
+
+Figure 1: Splunk search returning 147 process creation events utilizing encoded PowerShell execution flags.
+Phase 2: Host & Scope Distribution
+
+Analyzing the host field breakdown across the 147 flagged events revealed the distribution across internal workstations.
+
+Figure 2: Endpoint distribution showing FYODOR-L and ABUNGST-L as the primary hosts executing encoded commands.
+Phase 3: Payload Deobfuscation via CyberChef
+
+The extracted Base64 string from ABUNGST-L was passed into CyberChef for analysis. Because Windows PowerShell encodes command-line strings in UTF-16LE (Little-Endian Unicode), the decoding recipe required two stages:
+
+    From Base64
+
+    Decode Text (UTF-16LE (1200))
+
+Figure 3: CyberChef deobfuscation revealing the unencoded Net.WebClient download cradle targeting http://bit.ly/e0Mw9w.
+🛡️ Response & Mitigation Recommendations
+
+    Enforce Script Block Logging: Enable PowerShell Script Block Logging (Event ID 4104) via GPO to log unencoded script contents regardless of command-line obfuscation.
+
+    Implement Constrained Language Mode: Configure PowerShell Constrained Language Mode (CLM) and AppLocker / Windows Defender Application Control (WDAC) to prevent execution of unapproved scripts.
+
+    Block Known Shorteners & Malicious Domains: Block shortener domains (like bit.ly) at the secure web gateway (SWG) or DNS layer unless explicitly required for business purposes.
