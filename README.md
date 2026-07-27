@@ -18,7 +18,7 @@ SOC threat hunting and incident analysis across Windows/Linux authentication, Po
 | # | Scenario Title | Focus Area | Core Technologies | MITRE ATT&CK | Status |
 | :-: | :--- | :--- | :--- | :--- | :-: |
 | **01** | [Encoded PowerShell Execution Analysis](./scenarios/scenario-1-powershell.md) | Obfuscation & Malicious Download Cradles | Windows Event Logs, Base64, CyberChef | [T1059.001](https://attack.mitre.org/techniques/T1059/001/), [T1140](https://attack.mitre.org/techniques/T1140/) | `Completed` |
-| **02** | *Upcoming Scenario* | Authentication Anomaly Analysis | Windows Security Logs (4624/4625) | [T1110](https://attack.mitre.org/techniques/T1110/) | `In Progress` |
+| **02** | [Linux SSH Brute Force Analysis](./scenarios/scenario-2-ssh-bruteforce.md) | Account Reconnaissance & Brute Force | `linux_secure`, SPL Regex (`rex`), SSH Logs | [T1110.001](https://attack.mitre.org/techniques/T1110/001/), [T1087](https://attack.mitre.org/techniques/T1087/) | `Completed` |
 
 ---
 
