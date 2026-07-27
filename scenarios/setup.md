@@ -13,7 +13,7 @@ sudo docker run -d \
   --name splunk \
   -p 8000:8000 \
   -e "SPLUNK_START_ARGS=--accept-license" \
-  -e "SPLUNK_PASSWORD=YourStrongPassword123" \
+  -e "SPLUNK_PASSWORD=<YOUR_SECURE_PASSWORD>" \
   splunk/splunk:latest</code></pre>
 
 <p><img src="./images/setup_docker_splunk.png" alt="Docker Splunk Setup"></p>
