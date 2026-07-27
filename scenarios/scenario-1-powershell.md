@@ -53,10 +53,17 @@ The extracted Base64 string from ABUNGST-L was passed into CyberChef for analysi
     Decode Text (UTF-16LE (1200))
 
 Figure 3: CyberChef deobfuscation revealing the unencoded Net.WebClient download cradle targeting http://bit.ly/e0Mw9w.
-🛡️ Response & Mitigation Recommendations
 
-    Enforce Script Block Logging: Enable PowerShell Script Block Logging (Event ID 4104) via GPO to log unencoded script contents regardless of command-line obfuscation.
+---
 
-    Implement Constrained Language Mode: Configure PowerShell Constrained Language Mode (CLM) and AppLocker / Windows Defender Application Control (WDAC) to prevent execution of unapproved scripts.
+### 📄 Section 3: Mitigation Recommendations
+*(Paste this at the very bottom)*
 
-    Block Known Shorteners & Malicious Domains: Block shortener domains (like bit.ly) at the secure web gateway (SWG) or DNS layer unless explicitly required for business purposes.
+```markdown
+---
+
+## 🛡️ Response & Mitigation Recommendations
+
+1. **Enforce Script Block Logging:** Enable PowerShell Script Block Logging (Event ID 4104) via GPO to log unencoded script contents regardless of command-line obfuscation.
+2. **Implement Constrained Language Mode:** Configure PowerShell Constrained Language Mode (CLM) and AppLocker / Windows Defender Application Control (WDAC) to prevent execution of unapproved scripts.
+3. **Block Known Shorteners & Malicious Domains:** Block shortener domains (like `bit.ly`) at the secure web gateway (SWG) or DNS layer unless explicitly required for business purposes.
