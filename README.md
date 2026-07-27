@@ -33,9 +33,10 @@ SOC threat hunting and incident analysis across Windows/Linux authentication, Po
 
 ## 📌 Repository Structure
 
-```text
 .
 ├── README.md                 # Project Overview & Scenario Navigation
 ├── images/                   # Screenshots & Forensic Artifacts
 └── scenarios/                # Detailed Incident Investigation Reports
-    └── scenario-1-powershell.md
+    ├── setup.md              # Environment Architecture & Splunk Deployment
+    ├── scenario-1-powershell.md
+    └── scenario-2-ssh-bruteforce.md
