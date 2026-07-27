@@ -13,10 +13,16 @@ SOC threat hunting and incident analysis across Windows/Linux authentication, Po
 
 ---
 
+## ⚙️ Lab Environment & Setup
+
+* 🛠️ **[Splunk Lab & BOTSv3 Setup Documentation](./scenarios/setup.md)**: Steps for deploying Splunk via Docker and validating dataset ingestion.
+
+---
+
 ## 🔍 Investigation Scenarios
 
-| # | Scenario Title | Focus Area | Core Technologies | MITRE ATT&CK | Status |
-| :-: | :--- | :--- | :--- | :--- | :-: |
+| # | Scenario | Focus / Tactics | Key Data / Tools | MITRE ATT&CK | Status |
+|---|---|---|---|---|---|
 | **01** | [Encoded PowerShell Execution Analysis](./scenarios/scenario-1-powershell.md) | Obfuscation & Malicious Download Cradles | Windows Event Logs, Base64, CyberChef | [T1059.001](https://attack.mitre.org/techniques/T1059/001/), [T1140](https://attack.mitre.org/techniques/T1140/) | `Completed` |
 | **02** | [Linux SSH Brute Force Analysis](./scenarios/scenario-2-ssh-bruteforce.md) | Account Reconnaissance & Brute Force | `linux_secure`, SPL Regex (`rex`), SSH Logs | [T1110.001](https://attack.mitre.org/techniques/T1110/001/), [T1087](https://attack.mitre.org/techniques/T1087/) | `Completed` |
 
@@ -33,6 +39,7 @@ SOC threat hunting and incident analysis across Windows/Linux authentication, Po
 
 ## 📌 Repository Structure
 
+```text
 .
 ├── README.md                 # Project Overview & Scenario Navigation
 ├── images/                   # Screenshots & Forensic Artifacts
@@ -40,3 +47,4 @@ SOC threat hunting and incident analysis across Windows/Linux authentication, Po
     ├── setup.md              # Environment Architecture & Splunk Deployment
     ├── scenario-1-powershell.md
     └── scenario-2-ssh-bruteforce.md
+```
