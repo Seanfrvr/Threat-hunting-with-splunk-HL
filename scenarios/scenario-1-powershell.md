@@ -65,7 +65,7 @@
 </ol>
 
 <p><img src="../images/scenario1_cyberchef_decode.png" alt="CyberChef Analysis"></p>
-<p><em>Figure 3: CyberChef deobfuscation revealing the unencoded Net.WebClient download cradle targeting http://bit.ly/e0Mw9w.</em></p>
+<p><em>Figure 3: CyberChef deobfuscation revealing the unencoded Net.WebClient download cradle targeting <code>hxxp[:]//bit[.]ly/e0Mw9w</code>.</em></p>
 
 <hr>
 
