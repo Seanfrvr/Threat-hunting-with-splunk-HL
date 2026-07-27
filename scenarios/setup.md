@@ -16,7 +16,7 @@ sudo docker run -d \
   -e "SPLUNK_PASSWORD=<YOUR_SECURE_PASSWORD>" \
   splunk/splunk:latest</code></pre>
 
-<p><img src="./images/setup_docker_splunk.png" alt="Docker Splunk Setup"></p>
+<p><img src="../images/setup_docker_splunk.png" alt="Docker Splunk Setup"></p>
 <p><em>Figure 1: Terminal output displaying Docker pulling and initializing the Splunk Enterprise container.</em></p>
 
 <hr>
@@ -27,5 +27,5 @@ sudo docker run -d \
 <pre><code>index=botsv3 earliest=0
 | stats count by sourcetype</code></pre>
 
-<p><img src="./images/setup_ingestion.png" alt="Splunk Data Ingestion Verification"></p>
+<p><img src="../images/setup_ingestion.png" alt="Splunk Data Ingestion Verification"></p>
 <p><em>Figure 2: Splunk search results confirming 1,944,092 indexed events across sourcetypes (AWS, Linux, Windows, Web logs).</em></p>
