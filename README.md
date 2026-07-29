@@ -6,45 +6,48 @@ SOC threat hunting and incident analysis across Windows/Linux authentication, Po
 
 ## 🚀 Lab Architecture & Environment
 
-* **SIEM Platform:** Splunk Enterprise (`v10.4.1`)
-* **Dataset:** Boss of the SOC v3 (`index=botsv3`)
-* **Analysis Tools:** CyberChef, VirusTotal, Splunk Search Processing Language (SPL)
-* **Framework Alignment:** MITRE ATT&CK Framework
+- **SIEM Platform:** Splunk Enterprise (`v10.4.1`)
+- **Dataset:** Boss of the SOC v3 (`index=botsv3`)
+- **Analysis Tools:** CyberChef, VirusTotal, Splunk Search Processing Language (SPL)
+- **Framework Alignment:** MITRE ATT&CK Framework
 
 ---
 
 ## ⚙️ Lab Environment & Setup
 
-* 🛠️ **[Splunk Lab & BOTSv3 Setup Documentation](./scenarios/setup.md)**: Steps for deploying Splunk via Docker and validating dataset ingestion.
+- 🛠️ **[Splunk Lab & BOTSv3 Setup Documentation](https://github.com/Seanfrvr/Threat-hunting-with-splunk-HL/blob/main/scenarios/setup.md)**: Steps for deploying Splunk via Docker and validating dataset ingestion.
 
 ---
 
 ## 🔍 Investigation Scenarios
 
-| # | Scenario | Focus / Tactics | Key Data / Tools | MITRE ATT&CK | Status |
-|---|---|---|---|---|---|
-| **01** | [Encoded PowerShell Execution Analysis](./scenarios/scenario-1-powershell.md) | Obfuscation & Malicious Download Cradles | Windows Event Logs, Base64, CyberChef | [T1059.001](https://attack.mitre.org/techniques/T1059/001/), [T1140](https://attack.mitre.org/techniques/T1140/) | `Completed` |
-| **02** | [Linux SSH Brute Force Analysis](./scenarios/scenario-2-ssh-bruteforce.md) | Account Reconnaissance & Brute Force | `linux_secure`, SPL Regex (`rex`), SSH Logs | [T1110.001](https://attack.mitre.org/techniques/T1110/001/), [T1087](https://attack.mitre.org/techniques/T1087/) | `Completed` |
+| #      | Scenario                                                                                                                      | Focus / Tactics                          | Key Data / Tools                            | MITRE ATT&CK                                                                                                     | Status      |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ----------- |
+| **01** | [Encoded PowerShell Execution Analysis](https://github.com/Seanfrvr/Threat-hunting-with-splunk-HL/blob/main/scenarios/scenario-1-powershell.md) | Obfuscation & Malicious Download Cradles | Windows Event Logs, Base64, CyberChef       | [T1059.001](https://attack.mitre.org/techniques/T1059/001/), [T1140](https://attack.mitre.org/techniques/T1140/) | `Completed` |
+| **02** | [Linux SSH Brute Force Analysis](https://github.com/Seanfrvr/Threat-hunting-with-splunk-HL/blob/main/scenarios/scenario-2-ssh-bruteforce.md)    | Account Reconnaissance & Brute Force     | `linux_secure`, SPL Regex (`rex`), SSH Logs | [T1110.001](https://attack.mitre.org/techniques/T1110/001/), [T1087](https://attack.mitre.org/techniques/T1087/) | `Completed` |
+| **03** | [AWS CloudTrail Threat Hunt — S3 Asset Exposure](https://github.com/Seanfrvr/Threat-hunting-with-splunk-HL/blob/main/scenarios/scenario-3-aws-cloudtrail.md) | Cloud Identity Compromise & Asset Exposure | AWS CloudTrail, IAM, S3/EC2 API Logs | [T1078](https://attack.mitre.org/techniques/T1078/), [T1530](https://attack.mitre.org/techniques/T1530/) | `Completed` |
 
 ---
 
 ## 🛠️ Key Skills Demonstrated
 
-* **SPL Query Construction:** Writing targeted Splunk queries using wildcards, boolean logic, and field extractions.
-* **Payload Deobfuscation:** Decoding Base64 strings encoded in UTF-16LE via CyberChef to expose hidden command-line parameters.
-* **IoC Extraction & Defanging:** Safely isolating and defanging network Indicators of Compromise (`hxxp[:]//...`) for incident reporting.
-* **Detection & Remediation:** Translating attack signatures into actionable SOC defense recommendations (e.g., Script Block Logging, Constrained Language Mode).
+- **SPL Query Construction:** Writing targeted Splunk queries using wildcards, boolean logic, and field extractions.
+- **Payload Deobfuscation:** Decoding Base64 strings encoded in UTF-16LE via CyberChef to expose hidden command-line parameters.
+- **IoC Extraction & Defanging:** Safely isolating and defanging network Indicators of Compromise (`hxxp[:]//...`) for incident reporting.
+- **Cloud Identity & Access Analysis:** Tracing compromised IAM identities across AWS CloudTrail logs, correlating console logins, API activity, and S3/EC2 reconnaissance.
+- **Detection & Remediation:** Translating attack signatures into actionable SOC defense recommendations (e.g., Script Block Logging, Constrained Language Mode, S3 Block Public Access, MFA enforcement).
 
 ---
 
 ## 📌 Repository Structure
 
-```text
+```
 .
 ├── README.md                 # Project Overview & Scenario Navigation
 ├── images/                   # Screenshots & Forensic Artifacts
 └── scenarios/                # Detailed Incident Investigation Reports
     ├── setup.md              # Environment Architecture & Splunk Deployment
     ├── scenario-1-powershell.md
-    └── scenario-2-ssh-bruteforce.md
+    ├── scenario-2-ssh-bruteforce.md
+    └── scenario-3-aws-cloudtrail.md
 ```
