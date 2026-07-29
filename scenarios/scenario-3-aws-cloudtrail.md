@@ -31,4 +31,31 @@
 
 ```spl
 index=botsv3 sourcetype="aws:cloudtrail" (eventName=PutBucketAcl OR eventName=PutBucketPolicy)
-| table _time, userIdentity.userName, eventName, requestParameters.bucketName, sourceIPAddress
+| table _time, userIdentity.userName, eventName, requestParameters.bucketName, sourceIPAddress`
+
+<hr>
+
+<h3>Step 2: Attacker Scope & Chronological Timeline</h3>
+<p>Pivoting on identity <code>bstoll</code> and associated IPs revealed the full kill chain sequence:</p>
+
+<ol>
+  <li><b>Initial Access (11:35:27):</b> AWS Console login from <code>157.97.121.132</code>.</li>
+  <li><b>Persistence (11:36:12):</b> Executed <code>UpdateAccessKey</code> to alter/create programmatic API access keys.</li>
+  <li><b>IAM Recon (11:35 - 11:36):</b> Enumerated users (<code>ListUsers</code>), policies (<code>ListAttachedUserPolicies</code>), and groups (<code>ListGroups</code>).</li>
+  <li><b>S3 Exposure (15:01 - 15:57):</b> Shifted to IP <code>107.77.212.175</code>, listed buckets (<code>ListBuckets</code>), and altered ACL permissions (<code>PutBucketAcl</code>).</li>
+  <li><b>EC2 Recon (16:06+):</b> Expanded enumeration to virtual infrastructure (<code>DescribeInstances</code>, <code>DescribeVolumes</code>, <code>DescribeSecurityGroups</code>).</li>
+</ol>
+
+```spl
+index=botsv3 sourcetype="aws:cloudtrail" (userIdentity.userName="bstoll" OR sourceIPAddress="107.77.212.175")
+| stats count by eventName, eventSource
+| sort - count`````
+
+<hr>
+
+<h2>Remediation & Mitigation Recommendations</h2>
+<ol>
+  <li><b>Revoke Credentials:</b> Immediately deactivate Access Key <code>ASIAZB6TMXZ7FWTIS4NJ</code> and terminate active console sessions for <code>bstoll</code>.</li>
+  <li><b>Remediate S3 Permissions:</b> Revert <code>frothlywebcode</code> bucket ACL to private and enable AWS <b>S3 Block Public Access</b> at the account level.</li>
+  <li><b>Identity & Access Management:</b> Enforce Multi-Factor Authentication (MFA) across all console logins and enforce strict Least Privilege policies on IAM users.</li>
+</ol>
