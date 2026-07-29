@@ -7,7 +7,8 @@ Threat hunting analysis in Splunk against the `BOTSv3` dataset identified unauth
 
 ## 🎯 MITRE ATT&CK Mapping
 
-* **Tactic:** Discovery ([TA0007](https://attack.mitre.org/tactics/TA0007/)) ➔ **Technique:** Cloud Infrastructure Discovery ([T1580](https://attack.mitre.org/techniques/T1580/))
+* **Tactic:** Initial Access ([TA0001](https://attack.mitre.org/tactics/TA0001/)) ➔ **Technique:** Valid Accounts ([T1078](https://attack.mitre.org/techniques/T1078/))
+* **Tactic:** Discovery ([TA0007](https://attack.mitre.org/tactics/TA0007/)) ➔ **Techniques:** Account Discovery ([T1087](https://attack.mitre.org/techniques/T1087/)), Permission Groups Discovery ([T1069](https://attack.mitre.org/techniques/T1069/)), Cloud Infrastructure Discovery ([T1580](https://attack.mitre.org/techniques/T1580/))
 * **Tactic:** Collection ([TA0009](https://attack.mitre.org/tactics/TA0009/)) ➔ **Technique:** Data from Cloud Storage ([T1530](https://attack.mitre.org/techniques/T1530/)) — *attempted, not achieved*
 
 ---
@@ -21,7 +22,9 @@ Threat hunting analysis in Splunk against the `BOTSv3` dataset identified unauth
 | **AWS Account ID** | `622676721278` |
 | **Access Key ID** | `ASIAZB6TMXZ7FWTIS4NJ` |
 | **Target S3 Bucket** | `frothlywebcode` |
-| **Source IP** | `107.77.212.175` |
+| **Source IP (login/recon)** | `157.97.121.132` |
+| **Source IP (S3 exposure)** | `107.77.212.175` |
+| **Log Host** | `splunk.froth.ly` |
 | **Impact** | Low Confidentiality Risk / High Integrity Risk |
 
 ---
@@ -49,7 +52,28 @@ Expanding the raw event confirmed the identity context: ARN `arn:aws:iam::622676
 
 ### Step 2: Attacker Activity Breakdown
 
-Pivoting on `bstoll` and the source IP surfaced 615 total events. Ranking by volume (not chronology) shows what the actor spent the most time doing:
+**2a. Chronological timeline.** Sorting all 615 events by `_time` pins down the actual sequence of the attack:
+
+```spl
+index=botsv3 sourcetype="aws:cloudtrail" (userIdentity.userName="bstoll" OR sourceIPAddress="107.77.212.175")
+| stats count by _time, eventName, eventSource, userIdentity.userName, sourceIPAddress
+| sort _time
+```
+
+| Time | Event | Source IP |
+| :--- | :--- | :--- |
+| 11:35:27 | `ConsoleLogin` | `157.97.121.132` |
+| 11:35:53 | `GetAccountPasswordPolicy`, `GetAccountSummary`, `ListAccessKeys`, `ListAccountAliases` | `157.97.121.132` |
+| 11:35:58 | `ListUsers` (x2) | `157.97.121.132` |
+| 11:35:59 | `ListGroups` | `157.97.121.132` |
+| 11:36:04 | `GetUser`, `ListAttachedUserPolicies` | `157.97.121.132` |
+
+**Reading:** within 40 seconds of logging in, `bstoll` ran a scripted burst of IAM discovery commands — checking password policy, account limits, existing access keys, and other users/groups/policies. This is automated enumeration, not manual browsing.
+
+![Figure 2.1: Chronological attacker timeline](../images/5_attacker_timeline.png)
+*Figure 2.1: Chronological sequence showing `ConsoleLogin` from `157.97.121.132` immediately followed by automated IAM enumeration.*
+
+**2b. Volume ranking.** Separately, ranking the same 615 events by total count (not time) shows where the bulk of the activity landed later in the session:
 
 ```spl
 index=botsv3 sourcetype="aws:cloudtrail" (userIdentity.userName="bstoll" OR sourceIPAddress="107.77.212.175")
@@ -65,10 +89,10 @@ index=botsv3 sourcetype="aws:cloudtrail" (userIdentity.userName="bstoll" OR sour
 | 4 | `DescribeInstanceStatus` | ec2.amazonaws.com | 43 |
 | 5 | `DescribeVolumeStatus` / `DescribeVolumes` | ec2.amazonaws.com | 41 |
 
-**Reading:** the actor spent the bulk of their 615 API calls auditing S3 bucket permissions and mapping EC2 infrastructure (instances, volumes, tags, security groups) — consistent with an attacker scoping out what they could access and expose next, rather than one-off actions like `ListUsers`.
+**Reading:** most of the 615 total calls were spent auditing S3 bucket permissions and mapping EC2 infrastructure — some arriving in scripted bursts of 10-15 calls within the same second — rather than the one-off IAM discovery commands seen in the initial 40-second window above.
 
-![Figure 2.1: Top API actions by count](../images/3_attacker_api_recon.png)
-*Figure 2.1: Breakdown of top API actions showing heavy S3 permission auditing and EC2 infrastructure reconnaissance.*
+![Figure 2.2: Top API actions by count](../images/3_attacker_api_recon.png)
+*Figure 2.2: Volume ranking of all 615 events, showing S3 permission auditing and EC2 infrastructure discovery as the dominant activity.*
 
 ### Step 3: Exfiltration Verification
 
@@ -82,6 +106,8 @@ index=botsv3 frothlywebcode eventName=GetObject
 
 ![Figure 3.1: Zero GetObject events](../images/4_exfiltration_verification.png)
 *Figure 3.1: Exfiltration check returned 0 events, confirming no data was downloaded from `frothlywebcode`.*
+
+*(Screenshots for this scenario: `1_s3_acl_detection.png`, `2_cloudtrail_json_payload.png`, `3_attacker_api_recon.png`, `4_exfiltration_verification.png`, `5_attacker_timeline.png`)*
 
 ---
 
