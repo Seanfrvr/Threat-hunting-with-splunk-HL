@@ -1,61 +1,72 @@
-# Scenario 3: AWS CloudTrail Threat Hunt — S3 Asset Exposure & Identity Compromise
+Scenario 3: AWS CloudTrail Threat Hunt — S3 Asset Exposure & Identity Compromise
+Executive Summary
 
-<h2>Executive Summary</h2>
-<p>
-  During threat hunting analysis in Splunk using the <code>BOTSv3</code> dataset, unauthorized configuration changes were detected on an AWS S3 bucket. Further investigation revealed a compromised IAM user account (<code>bstoll</code>) executing automated discovery scripts, modifying access keys for persistence, exposing bucket permissions via <code>PutBucketAcl</code>, and conducting EC2 infrastructure reconnaissance across two distinct source IP addresses. Forensic log analysis confirmed <b>zero data exfiltration</b> (<code>0</code> <code>GetObject</code> calls logged).
-</p>
+During threat hunting analysis in Splunk using the BOTSv3 dataset, unauthorized configuration changes were detected on an AWS S3 bucket. Further investigation revealed a compromised IAM user account (bstoll) executing automated discovery scripts, modifying access keys for persistence, exposing bucket permissions via PutBucketAcl, and conducting EC2 infrastructure reconnaissance across two distinct source IP addresses. Forensic log analysis confirmed zero data exfiltration (0 GetObject calls logged).
+Technical Details & Indicators of Compromise (IOCs)
 
-<hr>
+    Compromised Account: bstoll
 
-<h2>Technical Details & Indicators of Compromise (IOCs)</h2>
-<ul>
-  <li><b>Compromised Account:</b> <code>bstoll</code></li>
-  <li><b>Target AWS Account ID:</b> <code>622676721278</code></li>
-  <li><b>Target User ARN:</b> <code>arn:aws:iam::622676721278:user/bstoll</code></li>
-  <li><b>Target S3 Bucket:</b> <code>frothlywebcode</code></li>
-  <li><b>Attacker Source IPs:</b>
-    <ul>
-      <li><code>157.97.121.132</code> (Initial AWS Console Login & IAM Recon)</li>
-      <li><code>107.77.212.175</code> (S3 Bucket ACL Modification & EC2 Recon)</li>
-    </ul>
-  </li>
-  <li><b>Impact Assessment:</b> <b>Low Confidentiality Risk / High Integrity Risk</b> (Bucket exposed, but no files downloaded).</li>
-</ul>
+    Target AWS Account ID: 622676721278
 
-<hr>
+    Target User ARN: arn:aws:iam::622676721278:user/bstoll
 
-<h2>Investigation Walkthrough</h2>
+    Target S3 Bucket: frothlywebcode
 
-<h3>Step 1: Incident Detection & Identification</h3>
-<p>Searching CloudTrail management events for bucket policy or ACL modifications revealed suspicious <code>PutBucketAcl</code> activity targeting the <code>frothlywebcode</code> bucket.</p>
+    Attacker Source IPs:
 
-```spl
+        157.97.121.132 (Initial AWS Console Login & IAM Recon)
+
+        107.77.212.175 (S3 Bucket ACL Modification & EC2 Recon)
+
+    Impact Assessment: Low Confidentiality Risk / High Integrity Risk (Bucket exposed, but no files downloaded).
+
+Investigation Walkthrough
+Step 1: Incident Detection & Identification
+
+Searching CloudTrail management events for bucket policy or ACL modifications revealed suspicious PutBucketAcl activity targeting the frothlywebcode bucket.
+Splunk SPL
+
 index=botsv3 sourcetype="aws:cloudtrail" (eventName=PutBucketAcl OR eventName=PutBucketPolicy)
-| table _time, userIdentity.userName, eventName, requestParameters.bucketName, sourceIPAddress`
+| table _time, userIdentity.userName, eventName, requestParameters.bucketName, sourceIPAddress
 
-<hr>
+Figure 1.1: Initial detection of unauthorized PutBucketAcl calls targeting bucket frothlywebcode by user bstoll.
 
-<h3>Step 2: Attacker Scope & Chronological Timeline</h3>
-<p>Pivoting on identity <code>bstoll</code> and associated IPs revealed the full kill chain sequence:</p>
+Expanding the raw log context confirmed the target user ARN (arn:aws:iam::622676721278:user/bstoll), access key ID (ASIAZB6TMXZ7FWTIS4NJ), and origin IP (107.77.212.175).
 
-<ol>
-  <li><b>Initial Access (11:35:27):</b> AWS Console login from <code>157.97.121.132</code>.</li>
-  <li><b>Persistence (11:36:12):</b> Executed <code>UpdateAccessKey</code> to alter/create programmatic API access keys.</li>
-  <li><b>IAM Recon (11:35 - 11:36):</b> Enumerated users (<code>ListUsers</code>), policies (<code>ListAttachedUserPolicies</code>), and groups (<code>ListGroups</code>).</li>
-  <li><b>S3 Exposure (15:01 - 15:57):</b> Shifted to IP <code>107.77.212.175</code>, listed buckets (<code>ListBuckets</code>), and altered ACL permissions (<code>PutBucketAcl</code>).</li>
-  <li><b>EC2 Recon (16:06+):</b> Expanded enumeration to virtual infrastructure (<code>DescribeInstances</code>, <code>DescribeVolumes</code>, <code>DescribeSecurityGroups</code>).</li>
-</ol>
+Figure 1.2: Expanded CloudTrail JSON payload detailing IAM user ARN, session attributes, and origin IP.
+Step 2: Attacker Scope & Chronological Timeline
 
-```spl
+Pivoting on identity bstoll and associated IPs revealed the full kill chain sequence:
+
+    Initial Access (11:35:27): AWS Console login from 157.97.121.132.
+
+    Persistence (11:36:12): Executed UpdateAccessKey to alter/create programmatic API access keys.
+
+    IAM Recon (11:35 - 11:36): Enumerated users (ListUsers), policies (ListAttachedUserPolicies), and groups (ListGroups).
+
+    S3 Exposure (15:01 - 15:57): Shifted to IP 107.77.212.175, listed buckets (ListBuckets), and altered ACL permissions (PutBucketAcl).
+
+    EC2 Recon (16:06+): Expanded enumeration to virtual infrastructure (DescribeInstances, DescribeVolumes, DescribeSecurityGroups).
+
+Splunk SPL
+
 index=botsv3 sourcetype="aws:cloudtrail" (userIdentity.userName="bstoll" OR sourceIPAddress="107.77.212.175")
 | stats count by eventName, eventSource
-| sort - count`````
+| sort - count
 
-<hr>
+Figure 2.1: Breakdown of top API actions highlighting automated IAM, S3, and EC2 reconnaissance.
+Step 3: Exfiltration Verification
 
-<h2>Remediation & Mitigation Recommendations</h2>
-<ol>
-  <li><b>Revoke Credentials:</b> Immediately deactivate Access Key <code>ASIAZB6TMXZ7FWTIS4NJ</code> and terminate active console sessions for <code>bstoll</code>.</li>
-  <li><b>Remediate S3 Permissions:</b> Revert <code>frothlywebcode</code> bucket ACL to private and enable AWS <b>S3 Block Public Access</b> at the account level.</li>
-  <li><b>Identity & Access Management:</b> Enforce Multi-Factor Authentication (MFA) across all console logins and enforce strict Least Privilege policies on IAM users.</li>
-</ol>
+To determine if sensitive files were downloaded following the ACL modification, S3 access events were queried for GetObject calls against frothlywebcode.
+Splunk SPL
+
+index=botsv3 frothlywebcode eventName=GetObject
+
+Figure 3.1: Exfiltration investigation returned 0 events, confirming no data exfiltration occurred.
+Remediation & Mitigation Recommendations
+
+    Revoke Credentials: Immediately deactivate Access Key ASIAZB6TMXZ7FWTIS4NJ and terminate active console sessions for bstoll.
+
+    Remediate S3 Permissions: Revert frothlywebcode bucket ACL to private and enable AWS S3 Block Public Access at the account level.
+
+    Identity & Access Management: Enforce Multi-Factor Authentication (MFA) across all console logins and enforce strict Least Privilege policies on IAM users.
